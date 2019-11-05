@@ -1,0 +1,3 @@
+[submodule "rcrs-server"]
+	path = rcrs-server
+	url = https://github.com/roborescue/rcrs-server.git
