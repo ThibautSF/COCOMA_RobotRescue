@@ -1,4 +1,4 @@
-package myteam.module.algorithm;
+package stss.qlearningproject.module.algorithm;
 
 import java.util.Collection;
 import java.util.HashMap;
