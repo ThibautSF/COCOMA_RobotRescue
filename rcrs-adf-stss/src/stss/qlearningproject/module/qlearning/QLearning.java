@@ -15,19 +15,28 @@ public class QLearning {
 
 	private double[][] qValues;
 
+	// learning rate
 	private float alpha;
 	private float beta;
+	// discount factor
 	private float gamma;
 
 	/**
+	 * Initialize QLearning with default values
 	 *
+	 * @param states  amount of states
+	 * @param actions amount of actions
 	 */
 	public QLearning(int states, int actions) {
 		this(states, actions, 0.4f, 8, 0.9f);
 	}
 
 	/**
-	 *
+	 * @param states  amount of states
+	 * @param actions amount of actions
+	 * @param alpha   learning rate
+	 * @param beta
+	 * @param gamma   discount factor
 	 */
 	public QLearning(int states, int actions, float alpha, float beta, float gamma) {
 		this.nbStates = states;
@@ -51,10 +60,16 @@ public class QLearning {
 	}
 
 	public int getAction(int state) {
-		// TODO get action from this.qValues[states]
+		// TODO get action from this.qValues[states] (which policy ? e-greedy ? other ?
 		return -1;
 	}
 
+	/**
+	 * @param prevS  The previous state
+	 * @param action The action done
+	 * @param reward The reward obtained
+	 * @param state  The actual state
+	 */
 	public void update(int prevS, int action, double reward, int state) {
 		double[] nextActionEstim = this.qValues[state];
 
@@ -66,6 +81,7 @@ public class QLearning {
 			}
 		}
 
+		// Edit qvalue
 		double[] prevActionEstim = this.qValues[prevS];
 		prevActionEstim[action] *= (1 - alpha);
 		prevActionEstim[action] += (this.alpha * (reward + this.gamma * maxExpectedRew));
