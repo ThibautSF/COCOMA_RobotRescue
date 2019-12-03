@@ -12,6 +12,7 @@ public class QLearning {
 	private int nbStates;
 	// Number of possible actions
 	private int nbActions;
+	private IPolicy explorePolicy;
 
 	private double[][] qValues;
 
@@ -28,7 +29,7 @@ public class QLearning {
 	 * @param actions amount of actions
 	 */
 	public QLearning(int states, int actions) {
-		this(states, actions, 0.4f, 8, 0.9f);
+		this(new Greedy(), states, actions, 0.4f, 8, 0.9f);
 	}
 
 	/**
@@ -38,7 +39,7 @@ public class QLearning {
 	 * @param beta
 	 * @param gamma   discount factor
 	 */
-	public QLearning(int states, int actions, float alpha, float beta, float gamma) {
+	public QLearning(IPolicy explorationPolicy, int states, int actions, float alpha, float beta, float gamma) {
 		this.nbStates = states;
 		this.nbActions = actions;
 		this.qValues = new double[states][];
@@ -51,17 +52,36 @@ public class QLearning {
 		this.gamma = gamma;
 	}
 
+	/**
+	 * @return
+	 */
 	public int getNbStates() {
 		return this.nbStates;
 	}
 
+	/**
+	 * @return
+	 */
 	public int getNbActions() {
 		return this.nbActions;
 	}
 
+	/**
+	 * @return Exploration Policy
+	 */
+	public IPolicy getExplorationPolicy() {
+		return explorePolicy;
+	}
+
+	/**
+	 * @param explorationPolicy Exploration Policy
+	 */
+	public void setExplorationPolicy(IPolicy explorationPolicy) {
+		this.explorePolicy = explorationPolicy;
+	}
+
 	public int getAction(int state) {
-		// TODO get action from this.qValues[states] (which policy ? e-greedy ? other ?
-		return -1;
+		return this.explorePolicy.chooseAction(this.qValues[state]);
 	}
 
 	/**
