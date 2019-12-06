@@ -41,24 +41,24 @@ public class Boltzmann implements IPolicy {
 		int action = -1;
 		double[] actionSoftMax = softMax(actionValues);
 
-		//Begin discrete prob
+		// Begin discrete prob
 		double rand = r.nextDouble();
-		
-		double[] cumprob = new double[actionSoftMax.length+1];
+
+		double[] cumprob = new double[actionSoftMax.length + 1];
 		cumprob[0] = 0;
 		int total = 0;
-		for (int i = 1; i < actionSoftMax.length+1; i++) {
+		for (int i = 1; i < actionSoftMax.length + 1; i++) {
 			total += actionSoftMax[i];
 			cumprob[i] = total;
 		}
-		
+
 		for (int i = 0; i < actionSoftMax.length; i++) {
-			if (rand > cumprob[i] && rand <= cumprob[i+1]) {
+			if (rand > cumprob[i] && rand <= cumprob[i + 1]) {
 				action = i;
 				break;
 			}
 		}
-		//End discrete prob
+		// End discrete prob
 
 		return action;
 	}
@@ -66,12 +66,12 @@ public class Boltzmann implements IPolicy {
 	private double[] softMax(double[] actionValues) {
 		double[] actionSoftMax = new double[actionValues.length];
 		double sum = 0;
-		
+
 		for (int i = 0; i < actionValues.length; ++i) {
 			actionSoftMax[i] = Math.exp(temperature * actionValues[i]);
 			sum += actionSoftMax[i];
 		}
-		
+
 		for (int i = 0; i < actionSoftMax.length; ++i)
 			actionSoftMax[i] /= sum;
 

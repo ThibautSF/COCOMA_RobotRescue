@@ -35,7 +35,6 @@ public class QLearning {
 	 * @param states  amount of states
 	 * @param actions amount of actions
 	 * @param alpha   learning rate
-	 * @param beta
 	 * @param gamma   discount factor
 	 */
 	public QLearning(IPolicy explorationPolicy, int states, int actions, float alpha, float gamma) {
