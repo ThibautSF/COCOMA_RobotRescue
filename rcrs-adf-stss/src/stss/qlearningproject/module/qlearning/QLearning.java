@@ -18,7 +18,6 @@ public class QLearning {
 
 	// learning rate
 	private float alpha;
-	private float beta;
 	// discount factor
 	private float gamma;
 
@@ -29,7 +28,7 @@ public class QLearning {
 	 * @param actions amount of actions
 	 */
 	public QLearning(int states, int actions) {
-		this(new Greedy(), states, actions, 0.4f, 8, 0.9f);
+		this(new RandPolicy(), states, actions, 0.4f, 0.9f);
 	}
 
 	/**
@@ -39,7 +38,7 @@ public class QLearning {
 	 * @param beta
 	 * @param gamma   discount factor
 	 */
-	public QLearning(IPolicy explorationPolicy, int states, int actions, float alpha, float beta, float gamma) {
+	public QLearning(IPolicy explorationPolicy, int states, int actions, float alpha, float gamma) {
 		this.nbStates = states;
 		this.nbActions = actions;
 		this.qValues = new double[states][];
@@ -48,7 +47,6 @@ public class QLearning {
 		}
 
 		this.alpha = alpha;
-		this.beta = beta;
 		this.gamma = gamma;
 	}
 
