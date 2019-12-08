@@ -3,11 +3,13 @@
  */
 package stss.qlearningproject.module.qlearning;
 
+import java.io.Serializable;
+
 /**
  * @author tsimonfine
  *
  */
-public interface IPolicy {
+public interface IPolicy extends Serializable {
 	/**
 	 * @param actionValues The qvalues/reward estimation for an state
 	 * @return an action id

@@ -10,6 +10,8 @@ import java.util.Random;
  *
  */
 public class RandPolicy implements IPolicy {
+	private static final long serialVersionUID = 2218381489137753699L;
+
 	protected Random r = new Random();
 
 	/**

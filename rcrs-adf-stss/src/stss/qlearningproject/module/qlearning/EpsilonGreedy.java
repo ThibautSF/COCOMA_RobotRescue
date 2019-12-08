@@ -10,6 +10,8 @@ import java.util.Random;
  *
  */
 public class EpsilonGreedy extends Greedy implements IPolicy {
+	private static final long serialVersionUID = 3188492833276330852L;
+
 	protected double epsilon;
 
 	protected Random r = new Random();

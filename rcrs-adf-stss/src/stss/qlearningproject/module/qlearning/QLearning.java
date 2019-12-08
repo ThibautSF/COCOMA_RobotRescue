@@ -3,11 +3,15 @@
  */
 package stss.qlearningproject.module.qlearning;
 
+import java.io.Serializable;
+
 /**
  * @author tsimonfine
  *
  */
-public class QLearning {
+public class QLearning implements Serializable {
+	private static final long serialVersionUID = -7562112486267395988L;
+
 	// Number of possible states
 	private int nbStates;
 	// Number of possible actions
@@ -17,18 +21,29 @@ public class QLearning {
 	private double[][] qValues;
 
 	// learning rate
-	private float alpha;
+	private double alpha;
 	// discount factor
-	private float gamma;
+	private double gamma;
 
 	/**
-	 * Initialize QLearning with default values
+	 * Initialize QLearning with default values (Random policy)
 	 *
 	 * @param states  amount of states
 	 * @param actions amount of actions
 	 */
 	public QLearning(int states, int actions) {
-		this(new RandPolicy(), states, actions, 0.4f, 0.9f);
+		this(new RandPolicy(), states, actions, 0.4, 0.9);
+	}
+
+	/**
+	 * Initialize QLearning with default values (custom policy)
+	 *
+	 * @param explorationPolicy the policy
+	 * @param states            amount of states
+	 * @param actions           amount of actions
+	 */
+	public QLearning(IPolicy explorationPolicy, int states, int actions) {
+		this(explorationPolicy, states, actions, 0.4, 0.9);
 	}
 
 	/**
@@ -37,7 +52,8 @@ public class QLearning {
 	 * @param alpha   learning rate
 	 * @param gamma   discount factor
 	 */
-	public QLearning(IPolicy explorationPolicy, int states, int actions, float alpha, float gamma) {
+	public QLearning(IPolicy explorationPolicy, int states, int actions, double alpha, double gamma) {
+		this.explorePolicy = explorationPolicy;
 		this.nbStates = states;
 		this.nbActions = actions;
 		this.qValues = new double[states][];

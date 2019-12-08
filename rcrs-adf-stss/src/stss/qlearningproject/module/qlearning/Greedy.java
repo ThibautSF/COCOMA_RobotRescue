@@ -8,6 +8,7 @@ package stss.qlearningproject.module.qlearning;
  *
  */
 public class Greedy implements IPolicy {
+	private static final long serialVersionUID = -6712614210655604203L;
 
 	/**
 	 * Constructor

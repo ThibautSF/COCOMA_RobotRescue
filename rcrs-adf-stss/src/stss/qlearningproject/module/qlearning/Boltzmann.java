@@ -12,6 +12,8 @@ import java.util.Random;
  *
  */
 public class Boltzmann implements IPolicy {
+	private static final long serialVersionUID = 601482317381529662L;
+
 	protected float temperature;
 	protected Random r = new Random();
 
