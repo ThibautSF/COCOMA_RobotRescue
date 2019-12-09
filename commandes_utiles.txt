@@ -1,0 +1,45 @@
+Lancer rcrs-server (avec map custom):
+cd rcrs-server/boot/
+
+	Pour custom_map:
+./start-comprun.sh -m ../../maps/custom_map/map/ -c ../../maps/custom_map/config/
+
+	Avec un seul agent pompier:
+./start-comprun.sh -m ../../maps/custom_map_onefirefighter/map/ -c ../../maps/custom_map_onefirefighter/config/
+
+
+Reminder fermer toutes les fenêtres du rcrs-server (dans rcrs-server/boot/):
+sh kill.sh 
+
+
+Lancer rcrs-adf-stss:
+cd rcrs-adf-stss/
+
+	(Après une modif de code) recompiler:
+java -jar ./library/rescue/adf/adf-core.jar -compile
+
+	Lancer (après avoir lancé rcrs-server):
+sh launch.sh -mc config/module_stss.cfg -all
+
+
+----------------------
+
+Fichiers intéressants :
+
+rcrs-adf-stss/src/stss/qlearningproject/module/qlearning/ -> contient tout les codes en rapport avec le qlearning
+	QLearning -> principal
+	IPolicy -> interface des polices
+	Boltzmann, EpsilonGreedy, Greedy, RandPolicy -> diverses stratégies d'exploration (implémentent IPolicy)
+	QExportImport -> gestion de l'import/export dans un fichier de l'objet QLearning
+	QLearningFactory -> classe à méthodes statiques pour gérer le QLearning partagé entre tout code appelant la même classe
+
+rcrs-adf-stss/src/stss/qlearningproject/extaction/ -> contient les "ext actions" (semble être un englobeur d'actions à choisir)
+	ActionFireFighting -> le choix s'effectue dans la méthode calc()
+		Mis à part la méthode calc(), tout les ajouts ont été flag entre des balises commentaire "Begin/End customs" (les autres méthodes sont normalement plus utilisées étant des résiduts du copier coller de adf.sample.extaction.ActionFireFighting). Il y a des commentaires normalement, si il en manque ne pas hésiter à ajouter le bloc commentaire avec un "TODO" au moins.
+
+rcrs-adf-stss/qtables -> stock de toutes les qtables pour récupération et mise à jour à chaque simulation
+	Note : supprimer le fichier pour supprimer l'apprentissage pour la prochaine simulation
+
+maps/ -> les cartes
+
+		

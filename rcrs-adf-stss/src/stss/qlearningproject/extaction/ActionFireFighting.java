@@ -50,9 +50,8 @@ public class ActionFireFighting extends ExtAction {
 
 	private EntityID target;
 
-	// Customs
-	private int[] state_descriptors = new int[] { 2, 2, 3, 2, 2, 2, 2 };
-	private List<String> states;
+	// Begin customs
+	// ----
 	// States:
 	// Building on fire (known) -> 0 or 1
 	// Building on fire close (action range) -> 0 or 1
@@ -63,6 +62,13 @@ public class ActionFireFighting extends ExtAction {
 	// In refuge (action range) -> 0 or 1
 	//
 	// Number of states = 2*2*3*2*2*2*2
+	//
+	// The status number of values for each parameter
+	private int[] state_descriptors = new int[] { 2, 2, 3, 2, 2, 2, 2 };
+	// The list of all possible states (computed from state_descriptors)
+	private List<String> states;
+	// ----
+	// End customs
 
 	public ActionFireFighting(AgentInfo agentInfo, WorldInfo worldInfo, ScenarioInfo scenarioInfo,
 			ModuleManager moduleManager, DevelopData developData) {
@@ -92,15 +98,28 @@ public class ActionFireFighting extends ExtAction {
 			break;
 		}
 
-		// Custom
+		// Begin customs
+		// ----
 		this.states = computeStates(new ArrayList<String>(), 0);
 
+		// Create a default empty qlearning (in case storage file don't exist)
 		IPolicy policy = new EpsilonGreedy(0.2);
 		QLearning qlearning = new QLearning(policy, this.states.size(), 5);
 
 		QLearningFactory.initInstance(this.getClass(), qlearning);
+		// ----
+		// End customs
 	}
 
+	// Begin customs
+	// ----
+	/**
+	 * Compute all the states possible outcomes
+	 *
+	 * @param states
+	 * @param step
+	 * @return
+	 */
 	private List<String> computeStates(List<String> states, int step) {
 		if (step < state_descriptors.length) {
 			List<String> localstates = new ArrayList<>();
@@ -128,10 +147,22 @@ public class ActionFireFighting extends ExtAction {
 		}
 	}
 
+	/**
+	 * Transform status array to string
+	 *
+	 * @param params the status as array
+	 * @return the status as a string
+	 */
 	private String paramToState(int[] params) {
 		return Arrays.stream(params).mapToObj(String::valueOf).collect(Collectors.joining(""));
 	}
 
+	/**
+	 * Transform status string to array
+	 *
+	 * @param str the status as string
+	 * @return the status as array
+	 */
 	private int[] stringToParam(String str) {
 		String[] strArray = str.split(",");
 		int[] intArray = new int[strArray.length];
@@ -143,6 +174,12 @@ public class ActionFireFighting extends ExtAction {
 		return intArray;
 	}
 
+	/**
+	 * Get the state of the agent
+	 *
+	 * @param agent agent to get the state
+	 * @return the state as array of int
+	 */
 	private int[] getActualState(FireBrigade agent) {
 		// States:
 		// Building on fire (known) -> 0 or 1
@@ -208,6 +245,8 @@ public class ActionFireFighting extends ExtAction {
 
 		return state;
 	}
+	// ----
+	// End customs
 
 	@Override
 	public ExtAction precompute(PrecomputeData precomputeData) {
@@ -282,8 +321,11 @@ public class ActionFireFighting extends ExtAction {
 		FireBrigade agent = (FireBrigade) this.agentInfo.me();
 		EntityID agentPosition = agent.getPosition();
 
+		// Get the qlearning of my class
 		QLearning qlearning = QLearningFactory.getInstance(this.getClass());
 		// qlearning.setExplorationPolicy(new RandPolicy());
+
+		// Get actual state
 		int[] beginState = getActualState(agent);
 		int beginStateID = this.states.indexOf(paramToState(beginState));
 
@@ -363,8 +405,10 @@ public class ActionFireFighting extends ExtAction {
 			break;
 		}
 
+		// Get state after action
 		int[] endState = getActualState(agent);
 		int endStateID = this.states.indexOf(paramToState(endState));
+
 		switch (action) {
 		case 1:
 			// action go to nearest building in fire
@@ -424,8 +468,14 @@ public class ActionFireFighting extends ExtAction {
 
 		reward += (burnings.size() - this.worldInfo.getFireBuildings().size()) * 10;
 
+		// Update qtable with reward info
 		qlearning.update(beginStateID, action, reward, endStateID);
 
+		/*
+		 * TODO maybe find another moment to save the instance (save only at end ? or at
+		 * least only once for all agent) ?
+		 */
+		// Save the instance to file in qtables/
 		QLearningFactory.saveInstance(this.getClass());
 
 		return this;
