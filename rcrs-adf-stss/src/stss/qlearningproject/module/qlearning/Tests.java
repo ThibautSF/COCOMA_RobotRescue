@@ -9,6 +9,8 @@ public class Tests {
 
 		myq.update(0, 1, 25, 1);
 
+		System.out.println(ei.getQlearning());
+
 		ei.saveQlearning(myq);
 
 		myq.update(0, 2, 50, 1);

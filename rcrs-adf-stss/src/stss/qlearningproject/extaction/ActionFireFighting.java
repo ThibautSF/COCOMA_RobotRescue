@@ -30,6 +30,7 @@ import rescuecore2.standard.entities.Human;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.worldmodel.EntityID;
+import stss.qlearningproject.module.qlearning.QLearning;
 
 public class ActionFireFighting extends ExtAction {
 	private PathPlanning pathPlanning;
@@ -43,6 +44,8 @@ public class ActionFireFighting extends ExtAction {
 	private boolean refillFlag;
 
 	private EntityID target;
+
+	private QLearning qlearn;
 
 	public ActionFireFighting(AgentInfo agentInfo, WorldInfo worldInfo, ScenarioInfo scenarioInfo,
 			ModuleManager moduleManager, DevelopData developData) {

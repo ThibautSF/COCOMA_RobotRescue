@@ -44,8 +44,10 @@ public class QExportImport {
 	 */
 	public void initFile() {
 		try {
+			// Create parent folders if not exists
 			if (this.file.getParentFile() != null)
 				this.file.getParentFile().mkdirs();
+			// Create file if not exist
 			this.file.createNewFile();
 			this.filewasinit = true;
 		} catch (IOException e) {
@@ -79,7 +81,7 @@ public class QExportImport {
 	}
 
 	/**
-	 * @return
+	 * @return QLearning object if ok null else
 	 */
 	public QLearning getQlearning() {
 		QLearning q = null;
