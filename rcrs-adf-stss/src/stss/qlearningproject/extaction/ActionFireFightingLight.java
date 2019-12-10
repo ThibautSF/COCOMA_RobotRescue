@@ -384,7 +384,7 @@ public class ActionFireFightingLight extends ExtAction {
 			}
 
 			if (b != null) {
-				if ((beginState[0] == 0)) {
+				if (beginState[0] == 1) {
 					reward -= 1; // Go to building on fire when already close
 				} else {
 					if (agent.getWater() == 0) {
@@ -412,7 +412,12 @@ public class ActionFireFightingLight extends ExtAction {
 				if (agent.getWater() == 0) {
 					reward -= 1; // Extinguish fire with no water availble
 				} else {
-					reward += 3; // Extinguish fire with water availble
+					if (beginState[0] == 0) {
+						// Extinguish fire when no fire in range
+						reward -= 1;
+					} else {
+						reward += 3; // Extinguish fire with water availble
+					}
 				}
 				this.result = new ActionExtinguish(b.getID(), this.maxExtinguishPower);
 			}
@@ -452,11 +457,12 @@ public class ActionFireFightingLight extends ExtAction {
 			this.result = new ActionRefill();
 			if (beginState[3] == 0) {
 				reward -= 1; // NOT Already in
-			}
-			if (agent.getWater() == 15000) {
-				reward -= 1; // Refilling when full
 			} else {
-				reward += 1; // Refilling
+				if (agent.getWater() == 15000) {
+					reward -= 1; // Refilling when full
+				} else {
+					reward += 1; // Refilling
+				}
 			}
 			break;
 
