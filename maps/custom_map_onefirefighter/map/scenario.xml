@@ -3,7 +3,7 @@
 <rcr:scenario xmlns:rcr="urn:roborescue:map:scenario">
 
 <rcr:refuge rcr:location="255"/>
-<rcr:firestation rcr:location="250"/>
+<!--<rcr:firestation rcr:location="250"/>-->
 <rcr:firebrigade rcr:location="274"/>
 <rcr:fire rcr:location="248"/>
 <rcr:fire rcr:location="934"/>
