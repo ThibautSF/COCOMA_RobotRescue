@@ -49,10 +49,10 @@ public class ActionFireFightingLight extends ExtAction {
 	// Begin customs
 	// ----
 	// States:
-	// 0 - fireBuildingCloseRange
-	// 1 - waterStatus 0 (empty) / 1 / 2 (full)
-	// 2 - refugeInRange
-	// 3 - InRefuge
+	// 0 - Building on fire close (action range) -> 0 or 1
+	// 1 - Water status -> 0 (empty) / 1 / 2 (full)
+	// 2 - Refuge close -> 0 or 1
+	// 3 - In refuge -> 0 or 1
 	//
 	// Number of states = 2*2*2*2*2
 	//
@@ -184,10 +184,10 @@ public class ActionFireFightingLight extends ExtAction {
 	 */
 	private int[] getActualState(FireBrigade agent) {
 		// States:
-		// 0 - fireBuildingCloseRange
-		// 1 - waterStatus 0 (empty) / 1 / 2 (full)
-		// 2 - refugeInRange
-		// 3 - InRefuge
+		// 0 - Building on fire close (action range) -> 0 or 1
+		// 1 - Water status -> 0 (empty) / 1 / 2 (full)
+		// 2 - Refuge close -> 0 or 1
+		// 3 - In refuge -> 0 or 1
 
 		int[] state = new int[this.state_descriptors.length];
 
@@ -196,13 +196,6 @@ public class ActionFireFightingLight extends ExtAction {
 
 		// Is any building on fire ? (0 for none / 1 for at least one building
 		Collection<Building> burnings = this.worldInfo.getFireBuildings();
-		EntityID[] tests = new EntityID[burnings.size()];
-		int i = 0;
-		for (Building building : burnings) {
-			tests[i] = building.getID();
-			i++;
-		}
-		System.out.println(Arrays.toString(tests));
 		// state[0] = (burnings.isEmpty()) ? 0 : 1;
 
 		// Is a building on fire next to me ?
@@ -324,8 +317,6 @@ public class ActionFireFightingLight extends ExtAction {
 		int[] beginState = getActualState(agent);
 		int beginStateID = this.states.indexOf(paramToState(beginState));
 
-		int waterQuantity = agent.getWater();
-
 		// TODO beginStateID == -1 error ?
 		System.out.println("state : " + paramToState(beginState));
 		int action = qlearning.getAction(beginStateID);
@@ -334,13 +325,12 @@ public class ActionFireFightingLight extends ExtAction {
 		int min_distance = Integer.MAX_VALUE;
 		Building b = null;
 
-		System.out.println("Begin calc");
 		int reward = 0;
 		// States:
-		// 0 - fireBuildingCloseRange
-		// 1 - waterStatus 0 (empty) / 1 / 2 (full)
-		// 2 - refugeInRange
-		// 3 - InRefuge
+		// 0 - Building on fire close (action range) -> 0 or 1
+		// 1 - Water status -> 0 (empty) / 1 / 2 (full)
+		// 2 - Refuge close -> 0 or 1
+		// 3 - In refuge -> 0 or 1
 		switch (action) {
 		case 1:
 			// action go to nearest building in fire
@@ -404,14 +394,12 @@ public class ActionFireFightingLight extends ExtAction {
 			// action go to nearest refuge
 			System.out.println("choose action go refuge");
 			Collection<StandardEntity> refuges = this.worldInfo.getEntitiesOfType(REFUGE);
-			System.out.println("NB REFUGES IN MAP : " + refuges.size());
 			StandardEntity r = null;
 			for (StandardEntity refuge : refuges) {
 				int distance = this.worldInfo.getDistance(agentPosition, refuge.getID());
 				if (distance < min_distance) {
 					min_distance = distance;
 					r = refuge;
-					System.out.println("DISTANCE MIN TO REFUGE" + min_distance);
 				}
 			}
 
@@ -433,9 +421,7 @@ public class ActionFireFightingLight extends ExtAction {
 						reward += 5; // We need to get water !
 					}
 				}
-				System.out.println(r);
 				this.result = this.getMoveAction(pathPlanning, agentPosition, r.getID());
-				System.out.println(r);
 			}
 			break;
 
