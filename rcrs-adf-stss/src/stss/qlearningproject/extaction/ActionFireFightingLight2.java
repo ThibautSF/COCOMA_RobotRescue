@@ -33,7 +33,7 @@ import stss.qlearningproject.module.qlearning.IPolicy;
 import stss.qlearningproject.module.qlearning.QLearning;
 import stss.qlearningproject.module.qlearning.QLearningFactory;
 
-public class ActionFireFightingLight extends ExtAction {
+public class ActionFireFightingLight2 extends ExtAction {
 	private PathPlanning pathPlanning;
 
 	private int maxExtinguishDistance;
@@ -49,21 +49,22 @@ public class ActionFireFightingLight extends ExtAction {
 	// Begin customs
 	// ----
 	// States:
-	// 0 - Building on fire close (action range) -> 0 or 1
-	// 1 - Water status -> 0 (empty) / 1 / 2 (full)
-	// 2 - Refuge close -> 0 or 1
-	// 3 - In refuge -> 0 or 1
+	// 0 - Building on fire (known) -> 0 or 1
+	// 1 - Building on fire close (action range) -> 0 or 1
+	// 2 - Water status -> 0 (empty) / 1 / 2 (full)
+	// 3 - Refuge close -> 0 or 1
+	// 4 - In refuge -> 0 or 1
 	//
-	// Number of states = 2*3*2*2
+	// Number of states = 2*2*3*2*2
 	//
 	// The status number of values for each parameter
-	private int[] state_descriptors = new int[] { 2, 3, 2, 2 };
+	private int[] state_descriptors = new int[] { 2, 2, 3, 2, 2 };
 	// The list of all possible states (computed from state_descriptors)
 	private List<String> states;
 	// ----
 	// End customs
 
-	public ActionFireFightingLight(AgentInfo agentInfo, WorldInfo worldInfo, ScenarioInfo scenarioInfo,
+	public ActionFireFightingLight2(AgentInfo agentInfo, WorldInfo worldInfo, ScenarioInfo scenarioInfo,
 			ModuleManager moduleManager, DevelopData developData) {
 		super(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
 		this.maxExtinguishDistance = scenarioInfo.getFireExtinguishMaxDistance();
@@ -101,6 +102,7 @@ public class ActionFireFightingLight extends ExtAction {
 		QLearning qlearning = new QLearning(policy, this.states.size(), 5, 0.9, 0.75);
 
 		QLearningFactory.initInstance(this.getClass(), qlearning);
+		QLearningFactory.getInstance(this.getClass()).setExplorationPolicy(new Boltzmann(0.5));
 
 		/*
 		 * QLearningFactory.getInstance(this.getClass()).setExplorationPolicy(new
@@ -184,10 +186,11 @@ public class ActionFireFightingLight extends ExtAction {
 	 */
 	private int[] getActualState(FireBrigade agent) {
 		// States:
-		// 0 - Building on fire close (action range) -> 0 or 1
-		// 1 - Water status -> 0 (empty) / 1 / 2 (full)
-		// 2 - Refuge close -> 0 or 1
-		// 3 - In refuge -> 0 or 1
+		// 0 - Building on fire (known) -> 0 or 1
+		// 1 - Building on fire close (action range) -> 0 or 1
+		// 2 - Water status -> 0 (empty) / 1 / 2 (full)
+		// 3 - Refuge close -> 0 or 1
+		// 4 - In refuge -> 0 or 1
 
 		int[] state = new int[this.state_descriptors.length];
 
@@ -196,40 +199,40 @@ public class ActionFireFightingLight extends ExtAction {
 
 		// Is any building on fire ? (0 for none / 1 for at least one building
 		Collection<Building> burnings = this.worldInfo.getFireBuildings();
-		// state[0] = (burnings.isEmpty()) ? 0 : 1;
+		state[0] = (burnings.isEmpty()) ? 0 : 1;
 
 		// Is a building on fire next to me ?
-		state[0] = 0;
+		state[1] = 0;
 		for (Building building : burnings) {
 			if (this.worldInfo.getDistance(agentPosition, building.getID()) < this.maxExtinguishDistance) {
-				state[0] = 1;
+				state[1] = 1;
 				break;
 			}
 		}
 
 		// My water tank status
 		int amount = agent.getWater();
-		state[1] = 0; // empty
+		state[2] = 0; // empty
 		if (amount == this.refillCompleted) { // full ?
-			state[1] = 2;
+			state[2] = 2;
 		} else if (amount > 0) { // not full & not empty
-			state[1] = 1;
+			state[2] = 1;
 		}
 
 		System.out.println("WATER : " + amount);
 
 		// Refuge close ?
-		state[2] = 0;
+		state[3] = 0;
 		Collection<StandardEntity> refuges = this.worldInfo.getEntitiesOfType(REFUGE);
 		for (StandardEntity refuge : refuges) {
 			if (this.worldInfo.getDistance(agentPosition, refuge.getID()) < this.maxExtinguishDistance) {
-				state[2] = 1;
+				state[3] = 1;
 				break;
 			}
 		}
 
 		// In refuge ?
-		state[3] = (StandardEntityURN.REFUGE == positionEntity.getStandardURN()) ? 1 : 0;
+		state[4] = (StandardEntityURN.REFUGE == positionEntity.getStandardURN()) ? 1 : 0;
 
 		return state;
 	}
@@ -327,10 +330,11 @@ public class ActionFireFightingLight extends ExtAction {
 
 		int reward = 0;
 		// States:
-		// 0 - Building on fire close (action range) -> 0 or 1
-		// 1 - Water status -> 0 (empty) / 1 / 2 (full)
-		// 2 - Refuge close -> 0 or 1
-		// 3 - In refuge -> 0 or 1
+		// 0 - Building on fire (known) -> 0 or 1
+		// 1 - Building on fire close (action range) -> 0 or 1
+		// 2 - Water status -> 0 (empty) / 1 / 2 (full)
+		// 3 - Refuge close -> 0 or 1
+		// 4 - In refuge -> 0 or 1
 		switch (action) {
 		case 1:
 			// action go to nearest building in fire
@@ -345,21 +349,28 @@ public class ActionFireFightingLight extends ExtAction {
 
 			if (b != null) {
 				if (beginState[0] == 1) {
-					reward -= 1; // Go to building on fire when already close
+					reward += 1;
 				} else {
-					if (beginState[1] == 0) {
+					reward -= 2; // Code should never arrive here
+				}
+
+				if (beginState[1] == 1) {
+					reward -= 2; // Go to building on fire when one is already close
+				} else {
+					if (beginState[2] == 0) {
 						reward -= 1; // Go to building on fire when no water available
 					} else {
 						reward += 1; // Go to building on fire with water
 
-						if (beginState[1] == 2) {
+						if (beginState[2] == 2) {
 							reward += 1; // Being full is even better ? TODO
 						}
 					}
 				}
 				this.result = this.getMoveAction(pathPlanning, agentPosition, b.getID());
 			} else {
-				reward -= 1; // No building on fire next, a bit like idle
+				// Arrive here when beginState[0] == 0
+				reward -= 2; // No building on fire next, a bit like idle
 			}
 			break;
 
@@ -375,12 +386,12 @@ public class ActionFireFightingLight extends ExtAction {
 			}
 
 			if (b != null) {
-				if (beginState[1] == 0) {
+				if (beginState[2] == 0) {
 					reward -= 1; // Extinguish fire with no water available
 				} else {
 					reward += 3; // Extinguish fire with water available
 
-					if (beginState[1] == 2) {
+					if (beginState[2] == 2) {
 						reward += 0; // Being full is even better ? TODO
 					}
 				}
@@ -404,20 +415,20 @@ public class ActionFireFightingLight extends ExtAction {
 			}
 
 			if (r != null) {
-				if (beginState[3] == 1) {
+				if (beginState[4] == 1) {
 					reward -= 10; // Already in
 				} else {
-					if (beginState[2] == 1) {
+					if (beginState[3] == 1) {
 						reward += 1; // It's close
 					}
 				}
 
-				if (beginState[1] == 2) {
+				if (beginState[2] == 2) {
 					reward -= 10; // Already full of water
 				} else {
 					reward += 0; // We are not full
 
-					if (beginState[1] == 0) {
+					if (beginState[2] == 0) {
 						reward += 5; // We need to get water !
 					}
 				}
@@ -429,15 +440,15 @@ public class ActionFireFightingLight extends ExtAction {
 			// action refill tank
 			System.out.println("choose action refill tank");
 			this.result = new ActionRefill();
-			if (beginState[3] == 0) {
+			if (beginState[4] == 0) {
 				reward -= 10; // NOT in refuge
 			} else {
-				if (beginState[1] == 2) {
+				if (beginState[2] == 2) {
 					reward -= 2; // Refilling when full
 				} else {
 					reward += 2; // Refilling
 
-					if (beginState[1] == 0) {
+					if (beginState[2] == 0) {
 						reward += 3; // We need to get water !
 					}
 				}
@@ -450,10 +461,13 @@ public class ActionFireFightingLight extends ExtAction {
 			// (the agent do other actions from his strategy, here search for fire)
 			System.out.println("choose action idle");
 			if (beginState[0] == 1) {
-				reward -= 1; // Don't search for fire when we already see a fire
+				reward -= 1; // Don't search when we already know an existing fire
 			}
-			if (beginState[1] == 0) {
-				reward -= 1; // Don't search for fire when we need water
+			if (beginState[1] == 1) {
+				reward -= 2; // Don't search for fire when we already see a fire
+			}
+			if (beginState[2] == 0) {
+				reward -= 2; // Don't search for fire when we need water
 			}
 
 			break;
