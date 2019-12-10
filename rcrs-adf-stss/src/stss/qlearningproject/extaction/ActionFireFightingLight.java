@@ -1,19 +1,16 @@
 package stss.qlearningproject.extaction;
 
-import static rescuecore2.standard.entities.StandardEntityURN.HYDRANT;
 import static rescuecore2.standard.entities.StandardEntityURN.REFUGE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import adf.agent.action.Action;
 import adf.agent.action.common.ActionMove;
-import adf.agent.action.common.ActionRest;
 import adf.agent.action.fire.ActionExtinguish;
 import adf.agent.action.fire.ActionRefill;
 import adf.agent.communication.MessageManager;
@@ -28,7 +25,6 @@ import adf.component.module.algorithm.PathPlanning;
 import rescuecore2.config.NoSuchConfigOptionException;
 import rescuecore2.standard.entities.Building;
 import rescuecore2.standard.entities.FireBrigade;
-import rescuecore2.standard.entities.Human;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.worldmodel.EntityID;
@@ -53,24 +49,16 @@ public class ActionFireFightingLight extends ExtAction {
 	// Begin customs
 	// ----
 	// States:
-	// Building on fire (known) -> 0 or 1
-	// Building on fire close (action range) -> 0 or 1
-	// Water status -> 0 (empty) / 1 / 2 (full)
-	// Water below 50% -> 0 or 1
-	// Water below 25% -> 0 or 1
-	// Refuge close -> 0 or 1
-	// In refuge (action range) -> 0 or 1
+	// param1 fireBuildingCloseRange
+	// param2 waterFull
+	// param3 refugeInRange
+	// param4 InRefuge
+	// param5 waterEmpty
 	//
-	// state 1 fireBuildingCloseRange
-	// state 2 waterStatus
-	// state 3 refugeInRange
-	// state 4 InRefuge
-	//
-	// Number of states = 2*2*3*2*2*2*2
+	// Number of states = 2*2*2*2*2
 	//
 	// The status number of values for each parameter
-	// private int[] state_descriptors = new int[] { 2, 2, 3, 2, 2, 2, 2 };
-	private int[] state_descriptors = new int[] { 2, 2, 2, 2 };
+	private int[] state_descriptors = new int[] { 2, 2, 2, 2, 2 };
 	// The list of all possible states (computed from state_descriptors)
 	private List<String> states;
 	// ----
@@ -220,32 +208,18 @@ public class ActionFireFightingLight extends ExtAction {
 		}
 
 		// My water tank status
-		// state[2] = 0; // Empty
-		// state[3] = 1; // Below 50%
-		// state[4] = 1; // Below 25%
-
 		int amount = agent.getWater();
-		if (amount == this.refillCompleted) {
+		if (amount == this.refillCompleted) { // full or not
 			state[1] = 1;
 		} else {
 			state[1] = 0;
 		}
+		if (amount == 0) { // empty or not
+			state[4] = 1;
+		} else {
+			state[4] = 0;
+		}
 
-		// if (amount > 0) {
-		// if (amount < this.refillCompleted) {
-		// // my water tank partial
-		// state[2] = 1;
-		//
-		// if (amount >= 0.5 * this.refillCompleted)
-		// state[3] = 0;
-		//
-		// if (amount >= 0.25 * this.refillCompleted)
-		// state[4] = 0;
-		// } else {
-		// // my water tank Full
-		// state[2] = 2;
-		// }
-		// }
 		System.out.println("WATER : " + amount);
 
 		// Refuge close ?
@@ -368,9 +342,10 @@ public class ActionFireFightingLight extends ExtAction {
 		// In refuge (action range) -> 0 or 1
 
 		// state 1 fireBuildingCloseRange
-		// state 2 waterStatus
+		// state 2 waterFull
 		// state 3 refugeInRange
 		// state 4 InRefuge
+		// state 5 waterEmpty
 		switch (action) {
 		case 1:
 			// action go to nearest building in fire
@@ -479,65 +454,6 @@ public class ActionFireFightingLight extends ExtAction {
 		int[] endState = getActualState(agent);
 		int endStateID = this.states.indexOf(paramToState(endState));
 
-		// switch (action) {
-		// case 1:
-		// // action go to nearest building in fire
-		// if (beginState[1] == 0) {
-		// if (endState[1] == 0) {
-		// // Agent don't move next a building in fire
-		// reward -= 10;
-		// } else {
-		// reward += 10;
-		// }
-		// } else {
-		//
-		// }
-		// break;
-		//
-		// case 2:
-		// // action extinguish fire
-		// if (beginState[1] == 0) {
-		// reward -= 1000; // Should have a fire to extinguish !
-		// }
-		//
-		// break;
-		//
-		// case 3:
-		// // action go to nearest refuge
-		//
-		// if (beginState[6] == 1) {
-		// reward -= 100; // Already in
-		// }
-		//
-		// if (beginState[5] == 0) {
-		// if (endState[5] == 1) {
-		// reward += 5;
-		// } else {
-		// reward -= 10;
-		// }
-		// }
-		//
-		// break;
-		//
-		// case 4:
-		// // action refill tank
-		// if (beginState[6] == 0)
-		// reward -= 1000; // Should be in a refuge in order to refill !
-		//
-		// reward += (agent.getWater() - waterQuantity);
-		//
-		// break;
-		//
-		// case 0:
-		// default:
-		// // action idle
-		// System.out.println("choose action idle");
-		// reward -= 10;
-		// break;
-		// }
-		//
-		// reward += (burnings.size() - this.worldInfo.getFireBuildings().size()) * 10;
-
 		// Update qtable with reward info
 		qlearning.update(beginStateID, action, reward, endStateID);
 
@@ -549,31 +465,6 @@ public class ActionFireFightingLight extends ExtAction {
 		QLearningFactory.saveInstance(this.getClass());
 		System.out.println("###################################################");
 		return this;
-	}
-
-	private Action calcExtinguish(FireBrigade agent, PathPlanning pathPlanning, EntityID target) {
-		EntityID agentPosition = agent.getPosition();
-		StandardEntity positionEntity = Objects.requireNonNull(this.worldInfo.getPosition(agent));
-		if (StandardEntityURN.REFUGE == positionEntity.getStandardURN()) {
-			Action action = this.getMoveAction(pathPlanning, agentPosition, target);
-			if (action != null) {
-				return action;
-			}
-		}
-
-		List<StandardEntity> neighbourBuilding = new ArrayList<>();
-		StandardEntity entity = this.worldInfo.getEntity(target);
-		if (entity instanceof Building) {
-			if (this.worldInfo.getDistance(positionEntity, entity) < this.maxExtinguishDistance) {
-				neighbourBuilding.add(entity);
-			}
-		}
-
-		if (neighbourBuilding.size() > 0) {
-			neighbourBuilding.sort(new DistanceSorter(this.worldInfo, agent));
-			return new ActionExtinguish(neighbourBuilding.get(0).getID(), this.maxExtinguishPower);
-		}
-		return this.getMoveAction(pathPlanning, agentPosition, target);
 	}
 
 	private Action getMoveAction(PathPlanning pathPlanning, EntityID from, EntityID target) {
@@ -591,125 +482,4 @@ public class ActionFireFightingLight extends ExtAction {
 		}
 		return null;
 	}
-
-	private boolean needRefill(FireBrigade agent, boolean refillFlag) {
-		if (refillFlag) {
-			StandardEntityURN positionURN = Objects.requireNonNull(this.worldInfo.getPosition(agent)).getStandardURN();
-			return !(positionURN == REFUGE || positionURN == HYDRANT) || agent.getWater() < this.refillCompleted;
-		}
-		return agent.getWater() <= this.refillRequest;
-	}
-
-	private boolean needRest(Human agent) {
-		int hp = agent.getHP();
-		int damage = agent.getDamage();
-		if (hp == 0 || damage == 0) {
-			return false;
-		}
-		int activeTime = (hp / damage) + ((hp % damage) != 0 ? 1 : 0);
-		if (this.kernelTime == -1) {
-			try {
-				this.kernelTime = this.scenarioInfo.getKernelTimesteps();
-			} catch (NoSuchConfigOptionException e) {
-				this.kernelTime = -1;
-			}
-		}
-		return damage >= this.thresholdRest || (activeTime + this.agentInfo.getTime()) < this.kernelTime;
-	}
-
-	private Action calcRefill(FireBrigade agent, PathPlanning pathPlanning, EntityID target) {
-		StandardEntityURN positionURN = Objects.requireNonNull(this.worldInfo.getPosition(agent)).getStandardURN();
-		if (positionURN == REFUGE) {
-			return new ActionRefill();
-		}
-		Action action = this.calcRefugeAction(agent, pathPlanning, target, true);
-		if (action != null) {
-			return action;
-		}
-		action = this.calcHydrantAction(agent, pathPlanning, target);
-		if (action != null) {
-			if (positionURN == HYDRANT && action.getClass().equals(ActionMove.class)) {
-				pathPlanning.setFrom(agent.getPosition());
-				pathPlanning.setDestination(target);
-				double currentDistance = pathPlanning.calc().getDistance();
-				List<EntityID> path = ((ActionMove) action).getPath();
-				pathPlanning.setFrom(path.get(path.size() - 1));
-				pathPlanning.setDestination(target);
-				double newHydrantDistance = pathPlanning.calc().getDistance();
-				if (currentDistance <= newHydrantDistance) {
-					return new ActionRefill();
-				}
-			}
-			return action;
-		}
-		return null;
-	}
-
-	private Action calcRefugeAction(Human human, PathPlanning pathPlanning, EntityID target, boolean isRefill) {
-		return this.calcSupplyAction(human, pathPlanning, this.worldInfo.getEntityIDsOfType(StandardEntityURN.REFUGE),
-				target, isRefill);
-	}
-
-	private Action calcHydrantAction(Human human, PathPlanning pathPlanning, EntityID target) {
-		Collection<EntityID> hydrants = this.worldInfo.getEntityIDsOfType(HYDRANT);
-		hydrants.remove(human.getPosition());
-		return this.calcSupplyAction(human, pathPlanning, hydrants, target, true);
-	}
-
-	private Action calcSupplyAction(Human human, PathPlanning pathPlanning, Collection<EntityID> supplyPositions,
-			EntityID target, boolean isRefill) {
-		EntityID position = human.getPosition();
-		int size = supplyPositions.size();
-		if (supplyPositions.contains(position)) {
-			return isRefill ? new ActionRefill() : new ActionRest();
-		}
-		List<EntityID> firstResult = null;
-		while (supplyPositions.size() > 0) {
-			pathPlanning.setFrom(position);
-			pathPlanning.setDestination(supplyPositions);
-			List<EntityID> path = pathPlanning.calc().getResult();
-			if (path != null && path.size() > 0) {
-				if (firstResult == null) {
-					firstResult = new ArrayList<>(path);
-					if (target == null) {
-						break;
-					}
-				}
-				EntityID supplyPositionID = path.get(path.size() - 1);
-				pathPlanning.setFrom(supplyPositionID);
-				pathPlanning.setDestination(target);
-				List<EntityID> fromRefugeToTarget = pathPlanning.calc().getResult();
-				if (fromRefugeToTarget != null && fromRefugeToTarget.size() > 0) {
-					return new ActionMove(path);
-				}
-				supplyPositions.remove(supplyPositionID);
-				// remove failed
-				if (size == supplyPositions.size()) {
-					break;
-				}
-				size = supplyPositions.size();
-			} else {
-				break;
-			}
-		}
-		return firstResult != null ? new ActionMove(firstResult) : null;
-	}
-
-	private class DistanceSorter implements Comparator<StandardEntity> {
-		private StandardEntity reference;
-		private WorldInfo worldInfo;
-
-		DistanceSorter(WorldInfo wi, StandardEntity reference) {
-			this.reference = reference;
-			this.worldInfo = wi;
-		}
-
-		@Override
-		public int compare(StandardEntity a, StandardEntity b) {
-			int d1 = this.worldInfo.getDistance(this.reference, a);
-			int d2 = this.worldInfo.getDistance(this.reference, b);
-			return d1 - d2;
-		}
-	}
-
 }
