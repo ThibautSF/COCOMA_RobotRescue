@@ -14,20 +14,21 @@ import java.util.Random;
 public class Boltzmann implements IPolicy {
 	private static final long serialVersionUID = 601482317381529662L;
 
-	protected float temperature;
+	protected double temperature;
 	protected Random r = new Random();
+	protected IPolicy rand = new RandPolicy();
 
 	/**
 	 * @param temperature
 	 */
-	public Boltzmann(float temperature) {
+	public Boltzmann(double temperature) {
 		this.temperature = temperature;
 	}
 
 	/**
 	 * @return temperature
 	 */
-	public float getTemperature() {
+	public double getTemperature() {
 		return temperature;
 	}
 
@@ -43,24 +44,32 @@ public class Boltzmann implements IPolicy {
 		int action = -1;
 		double[] actionSoftMax = softMax(actionValues);
 
+		// System.out.println(Arrays.toString(actionSoftMax));
+
 		// Begin discrete prob
-		double rand = r.nextDouble();
+		double d = r.nextDouble();
 
 		double[] cumprob = new double[actionSoftMax.length + 1];
 		cumprob[0] = 0;
-		int total = 0;
-		for (int i = 1; i < actionSoftMax.length + 1; i++) {
+		double total = 0;
+		for (int i = 0; i < actionSoftMax.length; i++) {
 			total += actionSoftMax[i];
-			cumprob[i] = total;
+			cumprob[i + 1] = total;
 		}
 
+		// System.out.println(Arrays.toString(cumprob));
+
 		for (int i = 0; i < actionSoftMax.length; i++) {
-			if (rand > cumprob[i] && rand <= cumprob[i + 1]) {
+			if (d > cumprob[i] && d <= cumprob[i + 1]) {
 				action = i;
 				break;
 			}
 		}
 		// End discrete prob
+
+		if (action == -1) {
+			action = this.rand.chooseAction(actionValues);
+		}
 
 		return action;
 	}

@@ -32,7 +32,7 @@ public class QLearning implements Serializable {
 	 * @param actions amount of actions
 	 */
 	public QLearning(int states, int actions) {
-		this(new RandPolicy(), states, actions, 0.4, 0.9);
+		this(new RandPolicy(), states, actions, 0.9, 0.75);
 	}
 
 	/**
@@ -43,7 +43,7 @@ public class QLearning implements Serializable {
 	 * @param actions           amount of actions
 	 */
 	public QLearning(IPolicy explorationPolicy, int states, int actions) {
-		this(explorationPolicy, states, actions, 0.4, 0.9);
+		this(explorationPolicy, states, actions, 0.9, 0.75);
 	}
 
 	/**
@@ -91,6 +91,48 @@ public class QLearning implements Serializable {
 	 */
 	public void setExplorationPolicy(IPolicy explorationPolicy) {
 		this.explorePolicy = explorationPolicy;
+	}
+
+	/**
+	 * @return the learning rate
+	 */
+	public double getLearningRate() {
+		return alpha;
+	}
+
+	/**
+	 * @param alpha new learning rate
+	 */
+	public void setLearningRate(double alpha) {
+		this.alpha = alpha;
+	}
+
+	/**
+	 * @return the discount factor
+	 */
+	public double getDiscountFactor() {
+		return gamma;
+	}
+
+	/**
+	 * @param gamma new discount factor
+	 */
+	public void setDiscountFactor(double gamma) {
+		this.gamma = gamma;
+	}
+
+	/**
+	 * @return qTable
+	 */
+	public double[][] getQTable() {
+		return qValues;
+	}
+
+	/**
+	 * @return qValues for the state
+	 */
+	public double[] getQTable(int state) {
+		return qValues[state];
 	}
 
 	public int getAction(int state) {
