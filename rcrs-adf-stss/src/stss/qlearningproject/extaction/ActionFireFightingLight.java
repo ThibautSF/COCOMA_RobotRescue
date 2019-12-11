@@ -28,7 +28,7 @@ import rescuecore2.standard.entities.FireBrigade;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.worldmodel.EntityID;
-import stss.qlearningproject.module.qlearning.Boltzmann;
+import stss.qlearningproject.module.qlearning.EpsilonGreedy;
 import stss.qlearningproject.module.qlearning.IPolicy;
 import stss.qlearningproject.module.qlearning.QLearning;
 import stss.qlearningproject.module.qlearning.QLearningFactory;
@@ -96,8 +96,8 @@ public class ActionFireFightingLight extends ExtAction {
 		this.states = computeStates(new ArrayList<String>(), 0);
 
 		// Create a default empty qlearning (in case storage file don't exist)
-		// IPolicy policy = new EpsilonGreedy(0.2);
-		IPolicy policy = new Boltzmann(0.2);
+		IPolicy policy = new EpsilonGreedy(0.2);
+		// IPolicy policy = new Boltzmann(0.2);
 		QLearning qlearning = new QLearning(policy, this.states.size(), 5, 0.9, 0.75);
 
 		QLearningFactory.initInstance(this.getClass(), qlearning);
@@ -220,7 +220,8 @@ public class ActionFireFightingLight extends ExtAction {
 
 		// Refuge close ?
 		state[2] = 0;
-		Collection<StandardEntity> refuges = this.worldInfo.getEntitiesOfType(REFUGE);
+		Collection<StandardEntity> refuges = this.worldInfo.getEntitiesOfType(StandardEntityURN.REFUGE,
+				StandardEntityURN.HYDRANT);
 		for (StandardEntity refuge : refuges) {
 			if (this.worldInfo.getDistance(agentPosition, refuge.getID()) < this.maxExtinguishDistance) {
 				state[2] = 1;
@@ -229,7 +230,8 @@ public class ActionFireFightingLight extends ExtAction {
 		}
 
 		// In refuge ?
-		state[3] = (StandardEntityURN.REFUGE == positionEntity.getStandardURN()) ? 1 : 0;
+		state[3] = (StandardEntityURN.REFUGE == positionEntity.getStandardURN()
+				|| StandardEntityURN.HYDRANT == positionEntity.getStandardURN()) ? 1 : 0;
 
 		return state;
 	}
