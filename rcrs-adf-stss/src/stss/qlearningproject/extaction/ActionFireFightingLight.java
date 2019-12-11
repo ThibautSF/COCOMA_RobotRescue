@@ -1,7 +1,5 @@
 package stss.qlearningproject.extaction;
 
-import static rescuecore2.standard.entities.StandardEntityURN.REFUGE;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -395,7 +393,8 @@ public class ActionFireFightingLight extends ExtAction {
 		case 3:
 			// action go to nearest refuge
 			System.out.println("choose action go refuge");
-			Collection<StandardEntity> refuges = this.worldInfo.getEntitiesOfType(REFUGE);
+			Collection<StandardEntity> refuges = this.worldInfo.getEntitiesOfType(StandardEntityURN.REFUGE,
+					StandardEntityURN.HYDRANT);
 			StandardEntity r = null;
 			for (StandardEntity refuge : refuges) {
 				int distance = this.worldInfo.getDistance(agentPosition, refuge.getID());

@@ -1,7 +1,11 @@
 package stss.qlearningproject.module.qlearning;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import stss.qlearningproject.extaction.ActionFireFightingLight2;
 
 public class Tests {
 
@@ -27,19 +31,28 @@ public class Tests {
 		System.out.println(testq.getAction(0));
 
 		List<String> states = computeStates(new ArrayList<>(), 0);
-		System.out.println(states.size());
-		System.out.println(states.indexOf("1121001"));
-		System.out.println(states.get(0));
-		System.out.println(states.get(1));
-		System.out.println(states.get(2));
-		System.out.println(states.get(3));
-		System.out.println(states.get(4));
-		System.out.println(states.get(5));
-		System.out.println(states.get(6));
+
+		QLearningFactory.initInstance(ActionFireFightingLight2.class, myq);
+		QLearning q = QLearningFactory.getInstance(ActionFireFightingLight2.class);
+
+		NumberFormat formatter = new DecimalFormat("#0.00000");
+
+		System.out.println(states.size() + " possible states");
+		for (int i = 0; i < states.size(); i++) {
+			String s = states.get(i);
+			double[] qvalues = q.getQTable(i);
+
+			for (double d : qvalues) {
+
+				s += "\t" + ((d < 0) ? formatter.format(d) : "+" + formatter.format(d));
+			}
+			System.out.println(s);
+		}
+
 	}
 
-	private static int[] state_descriptors = new int[] { 2, 2, 3 };
-	// private static int[] state_descriptors = new int[] { 2, 2, 3 };
+	// private static int[] state_descriptors = new int[] { 2, 3, 2, 2 };
+	private static int[] state_descriptors = new int[] { 2, 2, 3, 2, 2 };
 
 	private static List<String> computeStates(List<String> states, int step) {
 		if (step < state_descriptors.length) {
