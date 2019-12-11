@@ -31,19 +31,25 @@ Informations comes from `rcrs-manual.pdf`.
 
 ### 1 RCRS-server (project maps)
 
-Map with one fire fighter:
 ```
-./start-comprun.sh -m ../../maps/custom_map_onefirefighter/map/ -c ../../maps/custom_map_onefirefighter/config/
+cd rcrs-server/boot
 ```
 
+Map with one fire fighter:
+```
+sh start-comprun.sh -m ../../maps/custom_map_onefirefighter/map/ -c ../../maps/custom_map_onefirefighter/config/
+```
 
 Map with four fire fighters:
 ```
-bash start-comprun.sh -m ../../maps/custom_map/map/ -c ../../maps/custom_map/config/
+sh start-comprun.sh -m ../../maps/custom_map/map/ -c ../../maps/custom_map/config/
 ```
 
-
 ### 2 RCRS-adf (project agents)
+
+```
+cd rcrs-adf-stss
+```
 
 First learning agents:
 ```
